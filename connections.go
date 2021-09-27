@@ -8,14 +8,14 @@ import (
 type connections struct {
 	config DBConfig
 
-	stack []*connection
+	stack []IConnection
 
 	lock    sync.RWMutex
-	recycle chan *connection
+	recycle chan IConnection
 
 	recycleWait     int
 	recycleWaitLock sync.RWMutex
-	waitRecycle     chan *connection
+	waitRecycle     chan IConnection
 
 	createdLock sync.RWMutex
 	createdConn int
@@ -24,14 +24,14 @@ type connections struct {
 func newConnections(dbConfig DBConfig) (conns *connections, err error) {
 	conns = &connections{
 		config:      dbConfig,
-		recycle:     make(chan *connection),
-		waitRecycle: make(chan *connection),
+		recycle:     make(chan IConnection),
+		waitRecycle: make(chan IConnection),
 	}
 	go conns.recycleHandler()
 	return
 }
 
-func (thisObj *connections) getConnection() (conn *connection, err error) {
+func (thisObj *connections) getConnection() (conn IConnection, err error) {
 
 	if conn, err = thisObj.getFromStack(); err == nil {
 		return
@@ -51,7 +51,7 @@ func (thisObj *connections) getConnection() (conn *connection, err error) {
 
 }
 
-func (thisObj *connections) waitOne() (conn *connection, err error) {
+func (thisObj *connections) waitOne() (conn IConnection, err error) {
 
 	thisObj.recycleWaitLock.Lock()
 	thisObj.recycleWait++
@@ -70,7 +70,7 @@ func (thisObj *connections) waitOne() (conn *connection, err error) {
 	return
 }
 
-func (thisObj *connections) openOne() (conn *connection, err error) {
+func (thisObj *connections) openOne() (conn IConnection, err error) {
 	thisObj.createdLock.Lock()
 	defer thisObj.createdLock.Unlock()
 
@@ -105,13 +105,13 @@ func (thisObj *connections) recycleHandler() {
 	}
 }
 
-func (thisObj *connections) addToStack(conn *connection) {
+func (thisObj *connections) addToStack(conn IConnection) {
 	thisObj.lock.Lock()
 	defer thisObj.lock.Unlock()
 	thisObj.stack = append(thisObj.stack, conn)
 }
 
-func (thisObj *connections) getFromStack() (conn *connection, err error) {
+func (thisObj *connections) getFromStack() (conn IConnection, err error) {
 
 	thisObj.lock.Lock()
 
@@ -124,7 +124,7 @@ func (thisObj *connections) getFromStack() (conn *connection, err error) {
 		if connNum > 1 {
 			thisObj.stack = thisObj.stack[1:]
 		} else {
-			thisObj.stack = make([]*connection, 0)
+			thisObj.stack = make([]IConnection, 0)
 		}
 	} else {
 		err = fmt.Errorf("stack is empty")
@@ -146,7 +146,7 @@ func (thisObj *connections) getFromStack() (conn *connection, err error) {
 
 }
 
-func (thisObj *connections) closeOne(conn *connection) (err error) {
+func (thisObj *connections) closeOne(conn IConnection) (err error) {
 	thisObj.createdLock.Lock()
 	defer thisObj.createdLock.Unlock()
 	thisObj.createdConn--

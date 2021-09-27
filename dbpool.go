@@ -31,7 +31,7 @@ func New(pName string, config DBConfig) (err error) {
 	return
 }
 
-func Get(pName string) (db *connection, err error) {
+func Get(pName string) (db IConnection, err error) {
 
 	if pName == "" {
 		err = fmt.Errorf("parameter pName is empty , it should be pool name")

@@ -8,13 +8,13 @@ import (
 )
 
 type connection struct {
-	recycleChannel chan *connection
+	recycleChannel chan IConnection
 	conn           *sql.DB
 	lock           sync.Mutex
 	dbType         DBType
 }
 
-func newConnection(recycle chan *connection, config DBConfig) (conn *connection, err error) {
+func newConnection(recycle chan IConnection, config DBConfig) (conn IConnection, err error) {
 
 	var (
 		db *sql.DB

@@ -9,4 +9,5 @@ type IConnection interface {
 	Ping() (err error)
 	Close() (err error)
 	GetType() (t DBType)
+	close() (err error)
 }
